@@ -205,16 +205,17 @@ for (i in 1:(num_blocks )) {
   plot(model_lasso_fit)
   
   # Recherche du lambda
-  best_lambda<-model_lasso_fit$lambda.min
-  print(paste("Meilleur lambda:",best_lambda))
+  lambda<-model_lasso_fit$lambda.min
+  # lambda=0.01
+  print(paste("Lamba utilisé:",lambda))
   
   # Regression avec ledit lambda
-  best_model_lasso<- glmnet(X,Y, alpha = 1, lambda=0.1)  # alpha = 1 pour la régression Lasso
+  best_model_lasso<- glmnet(X,Y, alpha = 1, lambda=lambda)  # alpha = 1 pour la régression Lasso
   coef(best_model_lasso)
   
   
   # Prediction sur le jeu de donnée test du modèle selectionné
-  predicted_RH <- predict(best_model_lasso,s=best_lambda,newx=model.matrix(RH_03 ~ ., data = test_data)[, -1])
+  predicted_RH <- predict(best_model_lasso,s=lambda,newx=model.matrix(RH_03 ~ ., data = test_data)[, -1])
   # rmsep_lasso <- sqrt(min(model_lasso_fit$cvm))
   
   # Calculer la RMSEP
@@ -222,8 +223,67 @@ for (i in 1:(num_blocks )) {
   rmsep_gam <- sqrt(mean((true_RH - predicted_RH)^2))
   
   # Afficher les résultats
-  print(paste("RMSEP (GAM)= ", round(rmsep_gam,4)))
+  print(paste("RMSEP (lasso)= ", round(rmsep_gam,4)))
 }
+
+####--------------- RIDGE:  SELECTION MODELE LINEAIRE  ---------------
+
+i=1
+# Boucle pour découper le bloc initial et effectuer les prédictions
+for (i in 1:(num_blocks )) {
+  print(paste("---------------------Bloc n°", i,"/",num_blocks,"------------------------"))
+  
+  # Découper le bloc initial en petits blocs
+  start_index <- round(max((i - 1) * small_block_size +1,1),0) # pour ne pas etre = 0
+  end_index <- round(min(start_index + small_block_size, nrow(bloc_data)),0) # pour ne pas desppaser nrow
+  
+  print(paste("Test index from :", round(start_index,0),"to", round(end_index,0)))
+  
+  # jdd train et test
+  train_data <- bloc_data_mod[-c(start_index:end_index),]
+  test_data <- bloc_data_mod[start_index:end_index, ]
+  
+  X= model.matrix(RH_03 ~ ., data = train_data)[, -1] 
+  Y=train_data$RH_03
+  
+  # Il faut d'abord faire le choix de lambda.
+  model_ridge_fit<-cv.glmnet(X,Y, alpha = 0,lambda = seq(0.0001,1,0.1))  # alpha = 0 pour la régression Ridge
+  plot(model_ridge_fit)
+  
+  # Recherche du lambda
+  lambda<-model_ridge_fit$lambda.min
+  #lambda=0.01
+  print(paste("Lamba utilisé:",lambda))
+  print(paste("Log(Lamba) utilisé:",log(lambda)))
+  
+  # Regression avec ledit lambda
+  best_model_lasso<- glmnet(X,Y, alpha = 0, lambda=lambda)  
+  coef(best_model_lasso)
+  
+  
+  # Prediction sur le jeu de donnée test du modèle selectionné
+  predicted_RH <- predict(best_model_lasso,s=lambda,newx=model.matrix(RH_03 ~ ., data = test_data)[, -1])
+  # rmsep_lasso <- sqrt(min(model_lasso_fit$cvm))
+  
+  # Calculer la RMSEP
+  true_RH <- bloc_data_mod[start_index:end_index,]$RH_03
+  rmsep <- sqrt(mean((true_RH - predicted_RH)^2))
+  
+  # Afficher les résultats
+  print(paste("RMSEP (ridge)= ", round(rmsep,4)))
+}
+
+##
+
+
+
+
+
+
+
+
+
+
 
 ####--------------------------- GAM ---------------------------------------------------
 bloc_data_mod<- bloc_data_mod %>%mutate (Doy= as.numeric(Doy))
