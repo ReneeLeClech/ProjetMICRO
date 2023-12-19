@@ -12,7 +12,7 @@ library(data.table)
 library(gridExtra)
 
 ##-----
-data_all_RH_LUX<- readRDS("C:/Users/renax/Desktop/ACO/S9/ProjetOFB/data/cleaned_data_ALL.rds")
+data_all_RH_LUX<- readRDS("data/cleaned_data_ALL.rds")
 data_all_RH_LUX<-as.data.table(data_all_RH_LUX)
 
 colnames(data_all_RH_LUX)
@@ -210,4 +210,6 @@ plot2<- ggplot(tabforplot_RH, aes(x = Date_Heure_GMT02, y = Site, color = as.fac
 
 plot1
 plot2
+
+grid.arrange(plot1,plot2)
 
