@@ -20,7 +20,7 @@ colnames(data_all_RH_LUX)
 data_all_RH_LUX[, Date_Heure_GMT02 := as.POSIXct(Date_Heure_GMT02, format = "%Y-%m-%d %H:%M:%S")]
 
 dataRH_fac <- c("Site",  "Hour", "Month", "Day", "Year","Doy")
-dataRH_num <- c( "Rosee", "RH","Temp_C_RH","Temp_C_LUX","Intensity_lux")
+dataRH_num <- c( "Rosee", "RH","Temp_C_RH","Temp_C_LUX","lux")
 
 # Utilisation de data.table pour convertir les colonnes en facteurs et numériques
 data_all_RH_LUX[, (dataRH_fac) := lapply(.SD, as.factor), .SDcols = dataRH_fac]
@@ -51,25 +51,18 @@ merge1 <- DateRange %>% left_join(filter(data_all_RH_LUX, Site == "RH_01"), by =
 merge2 <- DateRange %>% left_join(filter(data_all_RH_LUX, Site == "RH_02"), by = "Date_Heure_GMT02")
 merge3 <- DateRange %>% left_join(filter(data_all_RH_LUX, Site == "RH_03"), by = "Date_Heure_GMT02")
 merge4 <- DateRange %>% left_join(filter(data_all_RH_LUX, Site == "RH_04"), by = "Date_Heure_GMT02")
+summary(merge1)
 
-merge1LUX <- as.data.table(merge1) %>% 
-  select("Intensity_lux","Date_Heure_GMT02")
-merge2LUX <- as.data.table(merge2) %>% 
-  select("Intensity_lux","Date_Heure_GMT02")
-merge3LUX <- as.data.table(merge3) %>% 
-  select("Intensity_lux","Date_Heure_GMT02")
-merge4LUX <- as.data.table(merge4) %>% 
-  select("Intensity_lux","Date_Heure_GMT02")
+merge1LUX <- as.data.table(merge1)[, .(lux, Date_Heure_GMT02)]
+merge2LUX <- as.data.table(merge2)[, .(lux, Date_Heure_GMT02)]
+merge3LUX <- as.data.table(merge3)[, .(lux, Date_Heure_GMT02)]
+merge4LUX <- as.data.table(merge4)[, .(lux, Date_Heure_GMT02)]
 
-merge1RH <- as.data.table(merge1) %>% 
-  select("RH","Date_Heure_GMT02")
-merge2RH <- as.data.table(merge2) %>% 
-  select("RH","Date_Heure_GMT02")
-merge3RH <- as.data.table(merge3) %>% 
-  select("RH","Date_Heure_GMT02")
-merge4RH <- as.data.table(merge4) %>% 
-  select("RH","Date_Heure_GMT02")
 
+merge1RH <- as.data.table(merge1)[, .(RH, Date_Heure_GMT02)]
+merge2RH <- as.data.table(merge2)[, .(RH, Date_Heure_GMT02)]
+merge3RH <- as.data.table(merge3)[, .(RH, Date_Heure_GMT02)]
+merge4RH <- as.data.table(merge4)[, .(RH, Date_Heure_GMT02)]
 
 ##----------------------------------------------------------------------------------
 
