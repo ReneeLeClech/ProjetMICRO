@@ -217,13 +217,13 @@ plot1<- ggplot(tabforplot_LUX, aes(x = Date_Heure_GMT02, y = Site, color = as.fa
   geom_vline(xintercept = as.numeric(as.POSIXct("2021-01-01")), color = "lightblue", linewidth = 0.5, alpha= 0.5) +
   geom_vline(xintercept = as.numeric(as.POSIXct("2022-01-01")), color = "lightblue", linewidth = 0.5, alpha= 0.5) +
   
-  geom_vline(xintercept = as.numeric(as.POSIXct(list_dates[[1]])), color = "darkblue", linewidth = 0.9, alpha= 0.5) +
-  geom_vline(xintercept = as.numeric(as.POSIXct(list_dates[[2]])), color = "darkblue", linewidth = 0.9, alpha= 0.5) +
-  geom_vline(xintercept = as.numeric(as.POSIXct(list_dates[[3]])), color = "darkblue", linewidth = 0.9, alpha= 0.5) +
-  geom_vline(xintercept = as.numeric(as.POSIXct(list_dates[[4]])), color = "darkblue", linewidth = 0.9, alpha= 0.5) +
-  geom_vline(xintercept = as.numeric(as.POSIXct(list_dates[[5]])), color = "darkblue", linewidth = 0.9, alpha= 0.5) +
-  geom_vline(xintercept = as.numeric(as.POSIXct(list_dates[[6]])), color = "darkblue", linewidth = 0.9, alpha= 0.5) +
-  
+  # geom_vline(xintercept = as.numeric(as.POSIXct(list_dates[[1]])), color = "darkblue", linewidth = 0.9, alpha= 0.5) +
+  # geom_vline(xintercept = as.numeric(as.POSIXct(list_dates[[2]])), color = "darkblue", linewidth = 0.9, alpha= 0.5) +
+  # geom_vline(xintercept = as.numeric(as.POSIXct(list_dates[[3]])), color = "darkblue", linewidth = 0.9, alpha= 0.5) +
+  # geom_vline(xintercept = as.numeric(as.POSIXct(list_dates[[4]])), color = "darkblue", linewidth = 0.9, alpha= 0.5) +
+  # geom_vline(xintercept = as.numeric(as.POSIXct(list_dates[[5]])), color = "darkblue", linewidth = 0.9, alpha= 0.5) +
+  # geom_vline(xintercept = as.numeric(as.POSIXct(list_dates[[6]])), color = "darkblue", linewidth = 0.9, alpha= 0.5) +
+  # 
   #Traits pour les sites
   geom_hline(yintercept = 1, color = "darkred", linewidth = 0.5, linetype="dashed", alpha= 0.5) +
   # geom_hline(yintercept = 2, color = "darkgreen", linewidth = 0.5, linetype="dashed", alpha= 0.5) +
@@ -265,12 +265,12 @@ plot2<- ggplot(tabforplot_RH, aes(x = Date_Heure_GMT02, y = Site, color = as.fac
   geom_vline(xintercept = as.numeric(as.POSIXct("2021-01-01")), color = "lightblue", linewidth = 0.5, alpha= 0.5) +
   geom_vline(xintercept = as.numeric(as.POSIXct("2022-01-01")), color = "lightblue", linewidth = 0.5, alpha= 0.5) +
   
-  geom_vline(xintercept = as.numeric(as.POSIXct(list_dates[[1]])), color = "darkblue",  linewidth = 0.9, alpha= 0.5) +
-  geom_vline(xintercept = as.numeric(as.POSIXct(list_dates[[2]])), color = "darkblue",  linewidth = 0.9, alpha= 0.5) +
-  geom_vline(xintercept = as.numeric(as.POSIXct(list_dates[[3]])), color = "darkblue",  linewidth = 0.9, alpha= 0.5) +
-  geom_vline(xintercept = as.numeric(as.POSIXct(list_dates[[4]])), color = "darkblue",  linewidth = 0.9, alpha= 0.5) +
-  geom_vline(xintercept = as.numeric(as.POSIXct(list_dates[[5]])), color = "darkblue",  linewidth = 0.9, alpha= 0.5) +
-  geom_vline(xintercept = as.numeric(as.POSIXct(list_dates[[6]])), color = "darkblue",  linewidth = 0.9, alpha= 0.5) +
+  # geom_vline(xintercept = as.numeric(as.POSIXct(list_dates[[1]])), color = "darkblue",  linewidth = 0.9, alpha= 0.5) +
+  # geom_vline(xintercept = as.numeric(as.POSIXct(list_dates[[2]])), color = "darkblue",  linewidth = 0.9, alpha= 0.5) +
+  # geom_vline(xintercept = as.numeric(as.POSIXct(list_dates[[3]])), color = "darkblue",  linewidth = 0.9, alpha= 0.5) +
+  # geom_vline(xintercept = as.numeric(as.POSIXct(list_dates[[4]])), color = "darkblue",  linewidth = 0.9, alpha= 0.5) +
+  # geom_vline(xintercept = as.numeric(as.POSIXct(list_dates[[5]])), color = "darkblue",  linewidth = 0.9, alpha= 0.5) +
+  # geom_vline(xintercept = as.numeric(as.POSIXct(list_dates[[6]])), color = "darkblue",  linewidth = 0.9, alpha= 0.5) +
 
   
   #Traits pour les sites
