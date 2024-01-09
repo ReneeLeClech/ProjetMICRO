@@ -21,7 +21,7 @@ tab_indiv_date<- readRDS("data/tab_indiv_date.rds")
 tab_indiv_date<-as.data.table(tab_indiv_date)
 
 # Les variables liées au hobo LUX du site 2 et du hobo RH du site 4 contiennent trop de NA: elles sont retirées du jdd
-tab_indiv_date <- subset(tab_indiv_date, select= -c(RH_04,Rosee_04,Temp_RH_04,Intensity_lux_02,Temp_LUX_02,Year,Doy)) 
+tab_indiv_date <- subset(tab_indiv_date, select= -c(RH_04,Rosee_04,Temp_RH_04,Intensity_lux_02,Temp_LUX_02,Year)) 
 colnames(tab_indiv_date)
 
 # Gestion des classes des colonnes
@@ -72,13 +72,13 @@ for (i in 1:num_blocks) {
 }
 list_dates
 
-# ------------------------- Tableau récap ------------------
+# ------------------------- Tableau récap pour les résidus  ------------------
 
 data_residual<-bloc_data_mod[,c("RH_03","Hour","Month")]
 
 
 #-------------------------- IMPUTATION PAR LA MOYENNE ----------------------------
-
+bloc_data_mod_lin<-bloc_data_mod[,-c("Doy")]
 # Calculer la moyenne de RH_03 sur le jeu de données train
 rmsep_list <- numeric(num_blocks)
 
@@ -94,14 +94,14 @@ for (i in 1:(num_blocks)) {
   
   # Prédiction de la moyenne de RH_03 du jeu de données train
   
-  moy = mean(bloc_data_mod$RH_03[-c(start_index:end_index)])
+  moy = mean(bloc_data_mod_lin$RH_03[-c(start_index:end_index)])
   predicted_RH <- rep(moy, end_index - start_index + 1)
   
   data_residual[start_index:end_index, "predictedRH_moyenne"] <- predicted_RH
   #head(data_residual)
   
   # Calculer la RMSEP
-  true_RH <- bloc_data_mod[start_index:end_index, ]$RH_03
+  true_RH <- bloc_data_mod_lin[start_index:end_index, ]$RH_03
   rmsep <- sqrt(mean((true_RH - predicted_RH)^2))
   
   rmsep_list[i] <- round(rmsep,2)
@@ -146,9 +146,6 @@ ggplot(mean_error_by_month, aes(x = Month, y = Error_moyenne)) +
   theme(axis.text.y = element_text(size = 17))
 
 
-
-
-
 #-------------------------- MODELE LINEAIRE COMPLET ----------------------------
 
 rmsep_list <- numeric(num_blocks)
@@ -162,16 +159,16 @@ for (i in 1:(num_blocks )) {
   
   print(paste("Test index from :", round(start_index,0),"to", round(end_index,0)))
   # creation du modèle linéaire complet
-  model_lin<-lm(RH_03~. ,data =bloc_data_mod[-c(start_index:end_index),] ,  )
+  model_lin<-lm(RH_03~. ,data =bloc_data_mod_lin[-c(start_index:end_index),] ,  )
   # print(summary(model_lin))
   
   # Prediction sur le jeu de donnée test du modèle selectionné
-  predicted_RH <- predict(model_lin,newdata=bloc_data_mod[start_index:end_index,])
+  predicted_RH <- predict(model_lin,newdata=bloc_data_mod_lin[start_index:end_index,])
   # Calculer la RMSEP
   
   data_residual[start_index:end_index, "predictedRH_lm_complet"] <- predicted_RH
   
-  true_RH <- bloc_data_mod$RH_03[start_index:end_index]
+  true_RH <- bloc_data_mod_lin$RH_03[start_index:end_index]
   rmsep <- sqrt(mean((true_RH - predicted_RH)^2))
   
   # implementation de la liste
@@ -186,6 +183,8 @@ for (i in 1:(num_blocks )) {
 
 rmsep_list
 round(mean(rmsep_list),2)
+
+summary(model_lin)
 
 ##----- graph residus
 summary(data_residual)
@@ -220,6 +219,8 @@ ggplot(mean_error_by_month, aes(x = Month, y = Error_lm_complet)) +
   theme_minimal()+
   theme(axis.text.y = element_text(size = 17))
 
+
+summary(mod_lin)
 # ---------------------------------LASSO ----------------
 rmsep_list <- numeric(num_blocks)
 list_lambda=c(1,0.5)
@@ -421,11 +422,6 @@ ggplot(mean_error_by_month, aes(x = Month, y = Error_lasso1)) +
   theme(axis.text.y = element_text(size = 17))
 
 
-
-
-
-
-
 ## -------------------------------- RIDGE ----------------------------------------- 
 
 
@@ -480,58 +476,58 @@ for (lambda in list_lambda){
 }
 
 
-# Ridge mais avec lambda qui s'ajuste automatiquement:
+#--------- Ridge mais avec lambda qui s'ajuste automatiquement:
 
-
-rmsep_list <- numeric(num_blocks)
-
-i=1
-# Boucle pour découper le bloc initial et effectuer les prédictions
-for (i in 1:(num_blocks )) {
-  print(paste("---------------------Bloc n°", i,"/",num_blocks,"------------------------"))
-  
-  # Découper le bloc initial en petits blocs
-  start_index <- round(max((i - 1) * small_block_size +1,1),0) # pour ne pas etre = 0
-  end_index <- round(min(start_index + small_block_size, nrow(bloc_data)),0) # pour ne pas desppaser nrow
-  
-  print(paste("Test index from :", round(start_index,0),"to", round(end_index,0)))
-  
-  # jdd train et test
-  train_data <- bloc_data_mod[-c(start_index:end_index),]
-  test_data <- bloc_data_mod[start_index:end_index, ]
-  
-  X= model.matrix(RH_03 ~ ., data = train_data)[, -1] 
-  Y=train_data$RH_03
-  
-  # Il faut d'abord faire le choix de lambda.
-  model_ridge_fit<-cv.glmnet(X,Y, alpha = 0)  # alpha = 0 pour la régression Ridge
-  # plot(model_lasso_fit)
-  lambda=model_ridge_fit$lambda.min
-  print(paste("Lamba utilisé:",lambda))
-  
-  # Regression avec ledit lambda
-  best_model_lasso<- glmnet(X,Y, alpha = 0, lambda=lambda)  # alpha = 1 pour la régression Lasso
-  coef(best_model_lasso)
-  
-  
-  # Prediction sur le jeu de donnée test du modèle selectionné
-  predicted_RH <- predict(best_model_lasso,s=lambda,newx=model.matrix(RH_03 ~ ., data = test_data)[, -1])
-  # rmsep_lasso <- sqrt(min(model_lasso_fit$cvm))
-  
-  # Calculer la RMSEP
-  true_RH <- bloc_data_mod[start_index:end_index,]$RH_03
-  rmsep_gam <- sqrt(mean((true_RH - predicted_RH)^2))
-  
-  rmsep_list[i] <- round(rmsep_gam,2)
-  
-  # Afficher les résultats
-  print(paste("RMSEP (ridge)= ", round(rmsep_gam,4)))
-}
-print("")
-print("*               les 5 rmspe:              *")
-print(rmsep_list)
-print(paste("moyenne des rmsep pour lambda qui varie "))
-print(round(mean(rmsep_list),5))
+# 
+# rmsep_list <- numeric(num_blocks)
+# 
+# i=1
+# # Boucle pour découper le bloc initial et effectuer les prédictions
+# for (i in 1:(num_blocks )) {
+#   print(paste("---------------------Bloc n°", i,"/",num_blocks,"------------------------"))
+#   
+#   # Découper le bloc initial en petits blocs
+#   start_index <- round(max((i - 1) * small_block_size +1,1),0) # pour ne pas etre = 0
+#   end_index <- round(min(start_index + small_block_size, nrow(bloc_data)),0) # pour ne pas desppaser nrow
+#   
+#   print(paste("Test index from :", round(start_index,0),"to", round(end_index,0)))
+#   
+#   # jdd train et test
+#   train_data <- bloc_data_mod[-c(start_index:end_index),]
+#   test_data <- bloc_data_mod[start_index:end_index, ]
+#   
+#   X= model.matrix(RH_03 ~ ., data = train_data)[, -1] 
+#   Y=train_data$RH_03
+#   
+#   # Il faut d'abord faire le choix de lambda.
+#   model_ridge_fit<-cv.glmnet(X,Y, alpha = 0)  # alpha = 0 pour la régression Ridge
+#   # plot(model_lasso_fit)
+#   lambda=model_ridge_fit$lambda.min
+#   print(paste("Lamba utilisé:",lambda))
+#   
+#   # Regression avec ledit lambda
+#   best_model_lasso<- glmnet(X,Y, alpha = 0, lambda=lambda)  # alpha = 1 pour la régression Lasso
+#   coef(best_model_lasso)
+#   
+#   
+#   # Prediction sur le jeu de donnée test du modèle selectionné
+#   predicted_RH <- predict(best_model_lasso,s=lambda,newx=model.matrix(RH_03 ~ ., data = test_data)[, -1])
+#   # rmsep_lasso <- sqrt(min(model_lasso_fit$cvm))
+#   
+#   # Calculer la RMSEP
+#   true_RH <- bloc_data_mod[start_index:end_index,]$RH_03
+#   rmsep_gam <- sqrt(mean((true_RH - predicted_RH)^2))
+#   
+#   rmsep_list[i] <- round(rmsep_gam,2)
+#   
+#   # Afficher les résultats
+#   print(paste("RMSEP (ridge)= ", round(rmsep_gam,4)))
+# }
+# print("")
+# print("*               les 5 rmspe:              *")
+# print(rmsep_list)
+# print(paste("moyenne des rmsep pour lambda qui varie "))
+# print(round(mean(rmsep_list),5))
 ## ---------------------------------------------------------------------------- 
 
 
@@ -579,9 +575,4 @@ cat("Moyenne des écarts par heure:\n", mean_residuals_by_hour, "\n")
 
 # Afficher la moyenne des RMSEP
 cat("Moyenne RMSEP:", round(mean(rmsep_list), 2), "\n")
-
-
-## ---------------------------------------------------------------------------- 
-## ---------------------------------------------------------------------------- 
-
 
